@@ -1,0 +1,61 @@
+---
+# Ansible role
+#
+# keepalived ro
+#
+
+- name: Check variables
+  import_tasks: 'check.yml'
+
+- name: Install keepalived packages
+  apt:
+    name:
+      - 'keepalived'
+    state: present
+
+- name: Create script directory
+  file:
+    path: '/opt/scripts'
+    state: directory
+    recurse: yes
+
+- name: Install keepalived_notify.sh script
+  copy:
+    src: 'keepalived_notify.sh'
+    dest: '/opt/scripts'
+    mode: '0755'
+
+- name: Create directory for configuration files
+  file:
+    path:   '/etc/keepalived'
+    state:  directory
+    owner:  root
+    group:  root
+    mode:   "0755"
+
+- name: Generate configuration file
+  template:
+    dest: '/etc/keepalived/keepalived.conf'
+    src: 'keepalived.conf.j2'
+    owner: 'root'
+    group: 'root'
+    mode: '0640'
+  notify:
+    - Reload keepalived master
+    - Reload keepalived other
+
+- name: Launch service on master node
+  service:
+    name: 'keepalived.service'
+    state: started
+    enabled: yes
+  when: failover_role == 'master'
+
+- name: Launch service on other nodes
+  service:
+    name: 'keepalived.service'
+    state: started
+    enabled: yes
+  when: failover_role != 'master'
+
+...

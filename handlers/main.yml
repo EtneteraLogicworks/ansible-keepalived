@@ -1,0 +1,17 @@
+---
+# Ansible handlers
+#
+
+- name: Reload keepalived master
+  service:
+    name: 'keepalived.service'
+    state: reloaded
+  when: failover_role == 'master'
+
+- name: Reload keepalived other
+  service:
+    name: 'keepalived.service'
+    state: reloaded
+  when: failover_role != 'master'
+
+...

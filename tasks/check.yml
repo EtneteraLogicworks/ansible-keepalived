@@ -1,0 +1,40 @@
+---
+# Ansible tasks
+#
+#
+
+- name: Check failover_role
+  fail:
+    msg: "'failover_role' must be set to one of 'master' or 'backup'"
+  when: failover_role|default('none') not in ['master', 'backup']
+
+- name: Check keepalived
+  fail:
+    msg: "'keepalived' must be defined"
+  when: keepalived is not defined
+
+- name: Check keepalived.priority
+  fail:
+    msg: "'keepalived<{{ item.name }}>.priority' must be set"
+  when: item.priority is not defined
+  loop: '{{ keepalived.instances }}'
+
+- name: Check keepalived.password
+  fail:
+    msg: "'keepalived<{{ item.name }}>.password' must be set"
+  when: item.password is not defined
+  loop: '{{ keepalived.instances }}'
+
+- name: Check keepalived.ipv4
+  fail:
+    msg: "'keepalived<{{ item.name }}>.ipv4' must be set"
+  when: item.ipv4 is not defined
+  loop: '{{ keepalived.instances }}'
+
+- name: Check keepalived.router_id
+  fail:
+    msg: "'keepalived<{{ item.name }}>.router_id' must be set"
+  when: item.router_id is not defined
+  loop: '{{ keepalived.instances }}'
+
+...

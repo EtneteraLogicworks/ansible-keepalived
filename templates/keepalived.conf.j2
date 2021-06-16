@@ -1,0 +1,41 @@
+! Configuration File for keepalived
+
+global_defs {
+    script_user root root
+    enable_script_security
+}
+{% for sync_group in keepalived.sync_groups | default([]) %}
+vrrp_sync_group {{ sync_group.name }} {
+    group {
+{%   for member in sync_group.members %}
+        {{ member }}
+{%   endfor %}
+    }
+{% if sync_group.notify is defined %}
+    notify {{ sync_group.notify }}
+{% endif %}
+}
+{% endfor %}
+
+{% for instance in keepalived.instances | default([]) %}
+vrrp_instance {{ instance.name | default('failover') }} {
+    state {{ instance.state | default('BACKUP') }}
+{% if instance.noprempt|default(true) or instance.state != "BACKUP" %}
+    nopreempt
+{% endif %}
+    interface {{ instance.interface | default('ens1') }}
+    virtual_router_id {{ instance.router_id }}
+    priority {{ instance.priority }}
+    advert_int {{ instance.advert_int | default('1') }}
+    authentication {
+        auth_type PASS
+        auth_pass {{ instance.password }}
+    }
+    virtual_ipaddress {
+        {{ instance.ipv4 }}
+    }
+{% if instance.notify is defined %}
+    notify {{ instance.notify }}
+{% endif %}
+}
+{% endfor %}
